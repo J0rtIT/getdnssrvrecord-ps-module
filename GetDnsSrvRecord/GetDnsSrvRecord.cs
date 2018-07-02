@@ -31,7 +31,7 @@ namespace GetDnsSrvRecord
         {
 
             WriteVerbose("Start Processing");
-            if (SoloSrv == true)
+            if (SoloSrv)
             {
                 OutputSrv = GetSRV(Domain);
                 PSObject returnon = TransformSBintoPso(OutputSrv);
@@ -51,13 +51,12 @@ namespace GetDnsSrvRecord
         }
         protected override void EndProcessing()
         {
-
             WriteVerbose("Finished");
         }
         protected override void StopProcessing()
         {
             WriteObject("Interrupted, exiting now");
-            //base.StopProcessing();
+            base.StopProcessing();
         }
         #endregion
 
@@ -93,7 +92,7 @@ namespace GetDnsSrvRecord
         Collection<PSObject> GetAllPS(string domain)
         {
             PowerShell powerShellInstance = PowerShell.Create();
-            string script = "Resolve-DnsName " + domain + " -SERVER 8.8.8.8  -Type ALL | select *";
+            string script = $"Resolve-DnsName {domain} -SERVER 8.8.8.8  -Type ALL | select *";
             powerShellInstance.AddScript(script);
             return powerShellInstance.Invoke();
         }
@@ -104,11 +103,7 @@ namespace GetDnsSrvRecord
             string weight = "-";
             string port = "-";
             bool found = false;
-
             String srvhostname = "-";
-
-
-
 
             Int16 lines = (Int16)Regex.Matches(outputsrv.ToString(), Environment.NewLine).Count;
             if (lines > 4)
@@ -127,7 +122,6 @@ namespace GetDnsSrvRecord
                 int i = 1;
                 foreach (Match match in mc)
                 {
-
                     foreach (Capture cp in match.Captures)
                     {
                         switch (i)
@@ -162,7 +156,6 @@ namespace GetDnsSrvRecord
             transformed.Members.Add(new PSNoteProperty("Priority", priority));
             transformed.Members.Add(new PSNoteProperty("weight", weight));
             transformed.Members.Add(new PSNoteProperty("SRV hostname", srvhostname));
-
             return transformed;
         }
         #endregion
